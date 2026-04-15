@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Job Posts</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="topbar">
+        <h1>Job Posts</h1>
+        <div class="topbar-actions">
+          {% if user %}
+          <span class="welcome">Hi, {{ user.username }}</span>
+          <a href="/favorites">Favorites</a>
+          <form method="post" action="/logout" class="inline-form">
+            <button type="submit">Logout</button>
+          </form>
+          {% else %}
+          <a href="/login">Login</a>
+          <a href="/register">Register</a>
+          {% endif %}
+        </div>
+      </header>
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="flash">{{ messages[0] }}</div>
+      {% endif %}
+      {% endwith %}
+      <form method="get" action="/" class="search-form">
+        <input type="text" name="title" placeholder="Search by job name" value="{{ search_params.title }}" />
+        <input type="text" name="type_contrat" placeholder="Search by contract type (e.g. CDI, CDD, stage)" value="{{ search_params.type_contrat }}" />
+        <input type="text" name="commune" placeholder="Search by location" value="{{ search_params.commune }}" />
+        <button type="submit">Search</button>
+      </form>
+      {% if jobs|length == 0 %}
+      <p>No jobs found. Check ingestion service/API connection.</p>
+      {% endif %}
+
+      <section class="jobs-grid">
+        {% for job in jobs %}
+        {% set full_desc = job.description or "No description" %}
+        {% set short_desc = (full_desc[:50] ~ "...") if full_desc|length > 50 else full_desc %}
+        <article class="job-card">
+          <h2>{{ job.intitule or "No title" }}</h2>
+          <p
+            class="job-description"
+            data-short="{{ short_desc }}"
+            data-full="{{ full_desc }}"
+            data-expanded="false"
+          >
+            {{ short_desc }}
+          </p>
+          {% if full_desc|length > 50 %}
+          <button type="button" class="show-more-btn">Show more</button>
+          {% endif %}
+          {% if user %}
+          <form method="post" action="/favorite/{{ job.id }}?next=/?page={{ page }}&{{ query_string }}" class="inline-form">
+            {% if job.id in favorite_ids %}
+            <button type="submit" class="star-btn active" title="Remove from favorites">★</button>
+            {% else %}
+            <button type="submit" class="star-btn" title="Add to favorites">☆</button>
+            {% endif %}
+          </form>
+          {% endif %}
+          <a href="/jobs/{{ job.id }}">View details</a>
+        </article>
+        {% endfor %}
+      </section>
+
+      <nav class="pagination">
+        {% if has_prev %}
+        <a href="/?page={{ page - 1 }}&{{ query_string }}">Previous</a>
+        {% else %}
+        <span class="disabled">Previous</span>
+        {% endif %}
+
+        <span class="page-number">Page {{ page }}</span>
+
+        {% if has_next %}
+        <a href="/?page={{ page + 1 }}&{{ query_string }}">Next</a>
+        {% else %}
+        <span class="disabled">Next</span>
+        {% endif %}
+      </nav>
+    </main>
+    <script>
+      document.querySelectorAll(".show-more-btn").forEach((button) => {
+        button.addEventListener("click", () => {
+          const description = button.parentElement.querySelector(".job-description");
+          const isExpanded = description.dataset.expanded === "true";
+          if (isExpanded) {
+            description.textContent = description.dataset.short;
+            description.dataset.expanded = "false";
+            button.textContent = "Show more";
+          } else {
+            description.textContent = description.dataset.full;
+            description.dataset.expanded = "true";
+            button.textContent = "Show less";
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ job.intitule or "Job Detail" }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="topbar">
+        <a href="/">Back</a>
+        <div class="topbar-actions">
+          {% if user %}
+          <a href="/favorites">Favorites</a>
+          <form method="post" action="/logout" class="inline-form">
+            <button type="submit">Logout</button>
+          </form>
+          {% else %}
+          <a href="/login">Login</a>
+          <a href="/register">Register</a>
+          {% endif %}
+        </div>
+      </header>
+      <h1>{{ job.intitule or "No title" }}</h1>
+      <p>{{ job.description or "No description" }}</p>
+      {% if user %}
+      <form method="post" action="/favorite/{{ job.id }}?next=/jobs/{{ job.id }}" class="inline-form">
+        {% if job.id in favorite_ids %}
+        <button type="submit" class="star-btn active" title="Remove from favorites">★</button>
+        {% else %}
+        <button type="submit" class="star-btn" title="Add to favorites">☆</button>
+        {% endif %}
+      </form>
+      {% endif %}
+
+      <!-- <section class="detail-box">
+        <p><strong>Company:</strong> {{ job.entreprise_nom or "-" }}</p>
+        <p><strong>Location:</strong> {{ job.commune or "-" }} {{ job.code_postal or "" }}</p>
+        <p><strong>Updated:</strong> {{ job.date_actualisation or "-" }}</p>
+      </section> -->
+    </main>
+  </body>
+</html>

@@ -1,0 +1,71 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: jobs-postgres
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U jobsuser -d jobsdb"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  job-api-service:
+    build:
+      context: ./services/job-api-service
+    container_name: job-api-service
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      API_HOST: ${API_HOST}
+      API_PORT: ${API_PORT}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  job-ingestion-service:
+    build:
+      context: ./services/job-ingestion-service
+    container_name: job-ingestion-service
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      EXTERNAL_JOBS_API_URL: ${EXTERNAL_JOBS_API_URL}
+      FRANCE_TRAVAIL_API_SEARCH: ${FRANCE_TRAVAIL_API_SEARCH}
+      FT_TOKEN_URL: ${FT_TOKEN_URL}
+      FT_CLIENT_ID: ${FT_CLIENT_ID}
+      FT_CLIENT_SECRET: ${FT_CLIENT_SECRET}
+      FT_SCOPE: ${FT_SCOPE}
+      FETCH_TIMEOUT_SECONDS: ${FETCH_TIMEOUT_SECONDS}
+      RUN_ON_STARTUP: ${RUN_ON_STARTUP}
+      CRON_SCHEDULE: ${CRON_SCHEDULE}
+      PAGE_SIZE: ${PAGE_SIZE}
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+
+  web-ui:
+    build:
+      context: ./services/web-ui
+    container_name: web-ui
+    environment:
+      JOB_API_BASE_URL: ${JOB_API_BASE_URL}
+      JOB_INGESTION_BASE_URL: ${JOB_INGESTION_BASE_URL:-http://job-ingestion-service:8080}
+      UI_HOST: ${UI_HOST}
+      UI_PORT: ${UI_PORT}
+    depends_on:
+      - job-api-service
+    ports:
+      - "3000:3000"
+
+volumes:
+  postgres_data:

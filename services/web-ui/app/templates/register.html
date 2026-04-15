@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Register</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <main class="container auth-container">
+      <h1>Create Account</h1>
+      {% with messages = get_flashed_messages() %}
+      {% if messages %}
+      <div class="flash">{{ messages[0] }}</div>
+      {% endif %}
+      {% endwith %}
+      <form method="post" class="auth-form">
+        <label>Username <input type="text" name="username" required /></label>
+        <label>Password <input type="password" name="password" required /></label>
+        <label>Date of birth <input type="date" name="dob" required /></label>
+        <label>Primary skill <input type="text" name="skill" placeholder="Python" /></label>
+        <label>Other skills (comma separated) <input type="text" name="skills" placeholder="Docker, PostgreSQL, FastAPI" /></label>
+        <button type="submit">Register</button>
+      </form>
+      <p>Already registered? <a href="/login">Login</a></p>
+    </main>
+  </body>
+</html>

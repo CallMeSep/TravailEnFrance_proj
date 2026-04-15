@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Favorites</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+  </head>
+  <body>
+    <main class="container">
+      <header class="topbar">
+        <h1>Your Favorites</h1>
+        <div class="topbar-actions">
+          <a href="/">All jobs</a>
+          <form method="post" action="/logout" class="inline-form">
+            <button type="submit">Logout</button>
+          </form>
+        </div>
+      </header>
+
+      {% if jobs|length == 0 %}
+      <p>No favorite jobs yet.</p>
+      {% endif %}
+
+      <section class="jobs-grid">
+        {% for job in jobs %}
+        <article class="job-card">
+          <h2>{{ job.intitule or "No title" }}</h2>
+          <p>{{ (job.description or "No description")[:180] }}{% if (job.description or "")|length > 180 %}...{% endif %}</p>
+          <form method="post" action="/favorite/{{ job.id }}?next=/favorites" class="inline-form">
+            <button type="submit" class="star-btn active" title="Remove from favorites">★</button>
+          </form>
+          <a href="/jobs/{{ job.id }}">View details</a>
+        </article>
+        {% endfor %}
+      </section>
+    </main>
+  </body>
+</html>

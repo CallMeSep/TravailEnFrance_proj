@@ -40,7 +40,8 @@ Apply manifests:
 
 ```bash
 kubectl apply -f k8s/namespace.yaml
-kubectl apply -f k8s/config/
+kubectl apply -f k8s/config/configmap.yaml
+./scripts/apply-k8s-secret.sh
 kubectl apply -f k8s/postgres/
 kubectl apply -f k8s/job-api-service/
 kubectl apply -f k8s/job-ingestion-service/
@@ -86,6 +87,6 @@ Then open `http://travail.local` (map it in your hosts file to `127.0.0.1` if ne
 
 ## Notes
 
-- Replace placeholder values in `k8s/config/secret.yaml` before non-local deployment.
+- Do not apply `k8s/config/secret.yaml` directly for real runs; use `./scripts/apply-k8s-secret.sh` so FT credentials are read from `.env`.
 - Configure the external API URL in `.env` / `docker-compose.yml` with `EXTERNAL_JOBS_API_URL`.
 - The ingestion service runs on startup and then daily using `CRON_SCHEDULE`.

@@ -121,6 +121,42 @@ kubectl auth can-i get secrets/app-secret --as=system:serviceaccount:travail-en-
 kubectl auth can-i list pods --as=system:serviceaccount:travail-en-france:web-ui-sa -n travail-en-france
 ```
 
+## Ingress Test Guide (No Port-Forward)
+
+### A) Standard host-based test
+
+```bash
+kubectl get pods -n ingress-nginx
+kubectl get ingress -n travail-en-france
+minikube ip
+```
+
+1. Ensure host mapping points `travail.local` to Minikube IP.
+2. Test from terminal:
+
+```bash
+curl -i -H "Host: travail.local" http://$(minikube ip)
+```
+
+Expected result: `HTTP/1.1 200 OK` with HTML containing `Job Posts`.
+
+### B) WSL + Docker driver fallback (recommended on Windows)
+
+When direct access to `http://$(minikube ip)` times out from WSL/Windows, use:
+
+```bash
+minikube service -n ingress-nginx ingress-nginx-controller --url
+```
+
+Keep that terminal open. In another terminal:
+
+```bash
+curl -i -H "Host: travail.local" http://127.0.0.1:<HTTP_PORT>
+```
+
+If two URLs are returned, the `http://` one is for HTTP requests.  
+Using `http://` against the HTTPS port returns `400 The plain HTTP request was sent to HTTPS port`.
+
 ## URLs
 
 ### Docker Compose
@@ -138,6 +174,61 @@ kubectl auth can-i list pods --as=system:serviceaccount:travail-en-france:web-ui
 - Do not apply `k8s/config/secret.yaml` directly for real runs; use `./scripts/apply-k8s-secret.sh` so FT credentials are read from `.env`.
 - Configure the external API URL in `.env` / `docker-compose.yml` with `EXTERNAL_JOBS_API_URL`.
 - The ingestion service runs on startup and then daily using `CRON_SCHEDULE`.
+
+## Kubernetes File Structure
+
+This section explains what each Kubernetes file does for teammates.
+
+### Root files
+
+- `k8s/namespace.yaml`
+  - Creates namespace `travail-en-france` to isolate all project resources.
+- `k8s/ingress.yaml`
+  - Host-based gateway (`travail.local`) routing to `web-ui` service.
+
+### Config
+
+- `k8s/config/configmap.yaml`
+  - Non-sensitive environment variables (ports, internal base URLs, API endpoints).
+- `k8s/config/secret.yaml`
+  - Placeholder secret template only (do not use for real credentials).
+- `scripts/apply-k8s-secret.sh`
+  - Reads real FT credentials from `.env` and applies `app-secret` safely.
+
+### Postgres
+
+- `k8s/postgres/pvc.yaml`
+  - Persistent volume claim for database storage.
+- `k8s/postgres/deployment.yaml`
+  - Runs PostgreSQL pod and mounts PVC.
+- `k8s/postgres/service.yaml`
+  - Internal ClusterIP service exposing port `5432`.
+
+### Microservices
+
+- `k8s/job-api-service/deployment.yaml`
+  - Deploys API service (`/health`, `/jobs`, auth/favorites endpoints).
+- `k8s/job-api-service/service.yaml`
+  - Internal ClusterIP service on `8000`.
+- `k8s/job-ingestion-service/deployment.yaml`
+  - Deploys ingestion scheduler + `/run-now` endpoint.
+- `k8s/job-ingestion-service/service.yaml`
+  - Internal ClusterIP service on `8080`.
+- `k8s/web-ui/deployment.yaml`
+  - Deploys Flask front-end.
+- `k8s/web-ui/service.yaml`
+  - Internal ClusterIP service on `3000`.
+
+### Security
+
+- `k8s/security/rbac.yaml`
+  - ServiceAccounts + Role/RoleBinding for least-privilege access.
+- `k8s/security/network-policies.yaml`
+  - Network segmentation:
+    - default deny egress
+    - DNS allow rule
+    - controlled egress per service
+    - Postgres ingress restricted to API + ingestion
 
 ## Troubleshooting
 

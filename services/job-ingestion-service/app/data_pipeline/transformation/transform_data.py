@@ -7,7 +7,7 @@ ValType = Union[str, Dict[str, Any], None]
 import json
 
 def extract_lieu_travail_detailed(val: ValType) -> pd.Series:
-    # Trả về các giá trị mặc định nếu dữ liệu rỗng
+    # Return default values when location data is empty.
     default_values = {
         'lieu_libelle': '', 
         'latitude': None, 
@@ -21,8 +21,7 @@ def extract_lieu_travail_detailed(val: ValType) -> pd.Series:
         return pd.Series(default_values)
     
     try:
-        # Chuyển chuỗi thành dict
-        
+        # Convert string payload to dict when needed.
         lieu = json.loads(val.replace("'", '"')) if isinstance(val, str) else val
         
         
@@ -42,7 +41,7 @@ def extract_entreprise_info(val: ValType) -> pd.Series:
         return pd.Series(default)
     
     try:
-        # Nếu val là string và có chứa dấu escape \', chúng ta cần xử lý
+        # Handle both string and dict payload shapes.
         if isinstance(val, str):
             societe = ast.literal_eval(val)
             

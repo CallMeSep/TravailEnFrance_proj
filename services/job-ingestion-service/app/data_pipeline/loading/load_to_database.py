@@ -57,7 +57,6 @@ class DatabaseLoader:
 
     def load_to_sql(self, df: pd.DataFrame, table_name: str):
         """Standard UPSERT logic."""
-        # ... (Keep your existing INSERT OR REPLACE logic from the previous step here) ...
         with self.engine.begin() as conn:
             df.to_sql(f"temp_{table_name}", conn, if_exists='replace', index=False)
             cols = ", ".join(df.columns)

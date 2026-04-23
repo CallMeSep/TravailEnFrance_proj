@@ -13,10 +13,11 @@ spec:
       labels:
         app: job-api-service
     spec:
+      serviceAccountName: job-api-service-sa
       containers:
         - name: job-api-service
-          image: hoanghai4804/job-api-service:latest
-          imagePullPolicy: Always
+          image: job-api-service:local
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000
           envFrom:

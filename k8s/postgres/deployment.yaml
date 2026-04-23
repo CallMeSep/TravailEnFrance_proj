@@ -13,9 +13,11 @@ spec:
       labels:
         app: postgres
     spec:
+      serviceAccountName: postgres-sa
       containers:
         - name: postgres
           image: postgres:16
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 5432
           env:
@@ -39,7 +41,7 @@ spec:
               mountPath: /var/lib/postgresql/data
           readinessProbe:
             exec:
-              command: ["sh", "-c", "pg_isready -U jobsuser -d jobsdb"]
+              command: ["sh", "-c", "pg_isready -U \"$POSTGRES_USER\" -d \"$POSTGRES_DB\""]
             initialDelaySeconds: 10
             periodSeconds: 10
       volumes:

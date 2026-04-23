@@ -13,10 +13,11 @@ spec:
       labels:
         app: job-ingestion-service
     spec:
+      serviceAccountName: job-ingestion-service-sa
       containers:
         - name: job-ingestion-service
-          image: hoanghai4804/job-ingestion-service:latest
-          imagePullPolicy: Always
+          image: job-ingestion-service:local
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           envFrom:

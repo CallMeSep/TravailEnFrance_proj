@@ -13,10 +13,11 @@ spec:
       labels:
         app: web-ui
     spec:
+      serviceAccountName: web-ui-sa
       containers:
         - name: web-ui
-          image: hoanghai4804/web-ui:latest
-          imagePullPolicy: Always
+          image: web-ui:local
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 3000
           envFrom:

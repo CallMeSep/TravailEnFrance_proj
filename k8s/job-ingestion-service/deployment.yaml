@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-ingestion-service
+  namespace: travail-en-france
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: job-ingestion-service
+  template:
+    metadata:
+      labels:
+        app: job-ingestion-service
+    spec:
+      containers:
+        - name: job-ingestion-service
+          image: hoanghai4804/job-ingestion-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8080
+            initialDelaySeconds: 20
+            periodSeconds: 10

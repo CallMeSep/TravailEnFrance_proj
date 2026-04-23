@@ -69,6 +69,7 @@ def index():
     if commune:
         api_params["commune"] = commune
 
+    api_unreachable = False
     try:
         response = requests.get(
             f"{API_BASE_URL}/jobs",
@@ -79,11 +80,12 @@ def index():
         jobs = response.json()
     except Exception:
         jobs = []
+        api_unreachable = True
 
     # If user is searching and DB has no hits, trigger ingestion with a single
     # comma-separated query (e.g. "python, CDI, Paris"), then retry once.
     search_terms = _build_search_terms(title, type_contrat, commune)
-    if page == 1 and not jobs and search_terms:
+    if page == 1 and not jobs and search_terms and not api_unreachable:
         _trigger_ingestion_for_search(search_terms)
         try:
             response = requests.get(
@@ -95,6 +97,7 @@ def index():
             jobs = response.json()
         except Exception:
             jobs = []
+            api_unreachable = True
 
     has_prev = page > 1
     has_next = len(jobs) == PAGE_SIZE
@@ -109,6 +112,7 @@ def index():
     return render_template(
         "index.html",
         jobs=jobs,
+        api_unreachable=api_unreachable,
         page=page,
         has_prev=has_prev,
         has_next=has_next,

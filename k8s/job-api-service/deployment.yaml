@@ -1,0 +1,32 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: job-api-service
+  namespace: travail-en-france
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: job-api-service
+  template:
+    metadata:
+      labels:
+        app: job-api-service
+    spec:
+      containers:
+        - name: job-api-service
+          image: hoanghai4804/job-api-service:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secret
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 10

@@ -35,7 +35,11 @@
         <button type="submit">Search</button>
       </form>
       {% if jobs|length == 0 %}
-      <p>No jobs found. Check ingestion service/API connection.</p>
+      {% if api_unreachable %}
+      <p>Cannot reach API service right now. Please check service health and network routing.</p>
+      {% else %}
+      <p>No jobs found yet. API is reachable, but ingestion returned no data. Check France Travail credentials (FT_CLIENT_ID/FT_CLIENT_SECRET/FT_SCOPE).</p>
+      {% endif %}
       {% endif %}
 
       <section class="jobs-grid">
